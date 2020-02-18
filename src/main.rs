@@ -28,16 +28,23 @@ fn roll(dice: &String) -> (String, i64) {
     let num_sides = captures.get(4).map_or(0, |m| m.as_str().parse::<i64>().unwrap());
 
     let mut rng = rand::thread_rng();
-    let die = Uniform::from(1..num_sides);
+
+    // the else prevents an empty range eg 0..0 from causing a panic.
+    let die = if num_sides > 1 {Uniform::from(0..num_sides)} else {Uniform::from(0..1)};
 
     let mut total = 0;
     let mut roll_history = String::new();
     for _roll in 0..num_rolls {
-        let face = die.sample(&mut rng);
+        // if num_sides == 0 or 1, give us num_sides, otherwise, do a roll
+        let face = if num_sides > 1 {die.sample(&mut rng) + 1} else {num_sides};
         total += face;
         roll_history += &format!(" + {}", face).to_string()
     }
-    roll_history = String::from(&roll_history[3..]);
+    if roll_history.chars().count() > 3 {
+        roll_history = String::from(&roll_history[3..]);
+    } else {
+        roll_history = format!("{}", 0)
+    }
 
     let mut result = String::new();
     if negative {
@@ -50,16 +57,19 @@ fn roll(dice: &String) -> (String, i64) {
 }
 
 fn cmd(original: &String) -> (Vec<&str>, bool, bool) {
-    // takes a command such as /r 1d20 and returns vec!["1d20", ]
+    // takes a command such as 1d20 and returns vec!["1d20", ], is_valid, provide_history
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"/(r|rh|hr)\s*(-?\d+d-?\d+)").unwrap();
+        static ref RE: Regex = Regex::new(r"/(r|rh|hr)\s*(-?\d+d-?\d+)?").unwrap();
     }
     let mut cmd_vec= Vec::new();
     let mut provide_history = false;
 
     if RE.is_match(original) {
         let caps = RE.captures(original).unwrap();
-        let dice = caps.get(2).map_or("INVALID", |m| m.as_str());
+        let mut dice = caps.get(2).map_or("", |m| m.as_str());
+        if dice.chars().count() == 0 {
+            dice = "1d20" // default roll if they did not provide one
+        }
         provide_history = caps.get(1).map_or(false, |m| m.as_str().contains("h"));
         cmd_vec.push(dice);
         return (cmd_vec, true, provide_history);
