@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::roll::{cmd, roll};
+    use crate::roll::{cmd, roll, Result};
 
     #[test]
     fn parse_basic_roll() {
@@ -8,10 +8,14 @@ mod tests {
         let rolls = vec!["1d20", "2d6"];
         for i in 0..commands.len() {
             let command = commands[i].to_string();
-            let (cmd_vec, is_valid, explain) = cmd(&command);
-            assert_eq!(cmd_vec[0], rolls[i]);
-            assert!(is_valid);
-            assert!(!explain);
+            let result = cmd(&command);
+            match result {
+                Result::Valid(cmd_vec, _, should_explain) => {
+                    assert_eq!(cmd_vec[0], String::from(rolls[i]));
+                    assert!(!should_explain)
+                }
+                _ => { std::panic!("These were valid rolls!") }
+            }
         }
     }
 
@@ -21,10 +25,14 @@ mod tests {
         let rolls = vec!["1d20", "2d6"];
         for i in 0..commands.len() {
             let command = commands[i].to_string();
-            let (cmd_vec, is_valid, explain) = cmd(&command);
-            assert_eq!(cmd_vec[0], rolls[i]);
-            assert!(is_valid);
-            assert!(explain);
+            let result = cmd(&command);
+            match result {
+                Result::Valid(cmd_vec, _, should_explain) => {
+                    assert_eq!(cmd_vec[0], String::from(rolls[i]));
+                    assert!(should_explain)
+                }
+                _ => { std::panic!("These were valid rolls!") }
+            }
         }
     }
 
@@ -32,8 +40,11 @@ mod tests {
     fn reject_huge_rolls() {
         let commands = vec!["/rx 50000d20", "/rx 2d60000000000000"];
         for command in commands {
-            let (_, is_valid, _) = cmd(&String::from(command));
-            assert!(is_valid);
+            let result = cmd(&String::from(command));
+            match result {
+                Result::TooBig(complaint) => {}
+                _ => { std::panic!("These were rolls were much too large!") }
+            }
         }
     }
 

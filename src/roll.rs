@@ -38,47 +38,46 @@ pub fn roll(dice: &String) -> (String, i64) {
     let result: String;
     if negative {
         total *= -1;
-        result = format!("-({}) = {}", roll_history, total).to_string();
+        result = format!("-({})", roll_history).to_string();
     } else {
-        result = format!("({}) = {}", roll_history, total).to_string();
+        result = format!("({})", roll_history).to_string();
     }
     return (String::from(result), total)
 }
 
-enum Result {
-    Invalid,
-    Valid,
+#[derive(PartialEq)]
+pub enum Result {
+    Invalid(Option<String>),
+    Valid(Vec<String>, Option<String>, bool), // bool is `explain`
     TooBig(String),
 }
 
-pub fn cmd(original: &String) -> (Vec<&str>, bool, bool) {
+pub fn cmd(original: &String) -> Result {
     // takes a command such as 1d20 and returns vec!["1d20", ], is_valid, explain
     lazy_static! {
         static ref DEFAULT: Regex = Regex::new(r"^/(r|rx|xr)\s*$").unwrap();
         static ref ACCEPT: Regex = Regex::new(r"^/(r|rx|xr)\s+(-?\d{1,4}d-?\d{1,10})?$").unwrap();
         static ref TOO_BIG: Regex = Regex::new(r"^/(r|rx|xr)\s+(-?\d{5,}d-?\d+|-?\d+d-?\d{10,})?$").unwrap();
     }
-    let mut cmd_vec= Vec::new();
-    let mut explain = false;
-    let mut is_valid = false;
-    let mut dice: &str = "";
+    let result: Result;
 
     if DEFAULT.is_match(original) {
         let caps = DEFAULT.captures(original).unwrap();
-        dice = "1d20";
-        explain = caps.get(1).map_or(false, |m| m.as_str().contains("x"));
-        is_valid = true;
+        let explain = caps.get(1).map_or(false, |m| m.as_str().contains("x"));
+        let dice = "1d20";
+        let cmd_vec = vec![String::from(dice)];
+        result = Result::Valid(cmd_vec, Some(String::from("(The default roll is 1d20)")), explain);
     } else if ACCEPT.is_match(original) {
         let caps = ACCEPT.captures(original).unwrap();
-        dice = caps.get(2).map_or("", |m| m.as_str());
-        is_valid = true;
-        explain = caps.get(1).map_or(false, |m| m.as_str().contains("x"));
+        let explain = caps.get(1).map_or(false, |m| m.as_str().contains("x"));
+        let dice = caps.get(2).map_or("", |m| m.as_str());
+        let cmd_vec = vec![String::from(dice)];
+        result = Result::Valid(cmd_vec, None, explain);
     } else if TOO_BIG.is_match(original) {
-        let caps = TOO_BIG.captures(original).unwrap();
-        dice = "0d0";
-        is_valid = true;
-        explain = caps.get(1).map_or(false, |m| m.as_str().contains("x"));
+        result = Result::TooBig(String::from("Hey, that roll is too big..."))
+    } else {
+        result = Result::Invalid(Some(String::from("Your roll did not match a valid command.")))
     }
-    cmd_vec.push(dice);
-    return (cmd_vec, is_valid, explain);
+
+    return result;
 }
