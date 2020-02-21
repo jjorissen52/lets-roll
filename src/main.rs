@@ -31,7 +31,7 @@ impl EventHandler for Handler {
                         show_roll = format!("{}", roll_result);
                     }
                     let actions = c![action.to_string(), for action in action_vec];
-                    outbox = format!("🎲 `{actions}` <@{author}>  `{show_roll}` 🎲", author=msg.author.id, actions=actions.join(" "), show_roll=show_roll);
+                    outbox = format!("🎲 `{actions}` <@{author}>  `{show_roll}` 🎲", author=msg.author.id, actions=actions.join(" + "), show_roll=show_roll);
                 }
                 Parsed::TooBig(complaint) => {
                     outbox = format!("🎲 <@{}>: `{cmd}` {complaint} 🎲", msg.author.id, cmd=msg.content, complaint=complaint);

@@ -5,7 +5,7 @@ https://discordapp.com/oauth2/authorize?&client_id=679070237701832726&scope=bot&
 * [X] Roll a Die: `/r ndm`, e.g. `/r 1d20`
 * [X] Roll a Die (Default is `1d20`): `/r `
 * [X] Roll Explain: `/rx {cmd}` tells you why you got what you got
-* [ ] Rolls Plus: `/r 1d20 + 3`
+* [X] Rolls Plus: `/r 1d20 + 3`
 * [ ] Additive Rolls: `/r 1d20 + 1d20`
 * [ ] Advantage Roll: `/ra ndm` e.g. `/ra 2d20`
   * `/ra 3d20` will pick the best outcome from 3 rolls

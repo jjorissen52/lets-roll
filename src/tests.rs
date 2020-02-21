@@ -3,6 +3,15 @@ mod tests {
     use crate::roll::{cmd, roll, str_to_roll, str_to_modify, Parsed, Action};
 
     #[test]
+    fn test_str_to_modify() {
+        let modifier_strings = vec!["+20", "-100"];
+        let modifiers = vec![Action::Modify(false, 20), Action::Modify(true, 100)];
+        for (i, string) in modifier_strings.iter().enumerate() {
+            assert_eq!(str_to_modify(string), modifiers[i])
+        }
+    }
+
+    #[test]
     fn parse_basic_roll() {
         let commands = vec!["/r 1d20", "/r 2d6", "/r -1d6", "/r -1d6"];
         let rolls = vec!["1d20", "2d6", "-1d6", "-1d6", "-1d6"];

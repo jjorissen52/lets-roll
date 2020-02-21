@@ -87,19 +87,22 @@ pub fn perform_command(command: Parsed) -> (Option<String>, i128) {
                         let _result = result as i128;
                         total += _result;
                         if explain {
-                            explanation += (if result < 0 {format!("- {}", roll_history)} else {format!("+ {}", roll_history)}).as_str();
+                            explanation += (if result < 0 {format!("{}", roll_history)} else {format!("+ {}", roll_history)}).as_str();
                         }
                     }
                     Action::Modify(is_negative, value) => {
                         let _result = if is_negative {-1 * (value as i128)} else {value as i128};
                         total += _result;
                         if explain {
-                            explanation += (if is_negative {format!("- {}", value)} else {format!("{}", value)}).as_str()
+                            explanation += (if is_negative {format!(" - {}", value)} else {format!(" + {}", value)}).as_str()
                         }
                     }
                 }
             }
             if explain {
+                if explanation.starts_with("+ ") {
+                    return (Some(explanation[2..].to_string()), total)
+                }
                 return (Some(explanation), total);
             }
             return (None, total);
@@ -128,7 +131,7 @@ pub fn str_to_roll(dice: &str) -> Action {
 pub fn str_to_modify(modifier: &str) -> Action {
     let captures = MODIFY.captures(modifier).unwrap();
     let minus = captures.get(1).map_or(false, |m| m.as_str() == "-");
-    let value = captures.get(4).map_or(0, |m| m.as_str().parse::<u64>().unwrap());
+    let value = captures.get(2).map_or(0, |m| m.as_str().parse::<u64>().unwrap());
     return Action::Modify(minus, value);
 }
 
@@ -168,6 +171,4 @@ pub fn roll(dice: Action) -> (String, i64) {
             std::panic!("roll only supports Action::Roll instances!")
         }
     }
-
-
 }
